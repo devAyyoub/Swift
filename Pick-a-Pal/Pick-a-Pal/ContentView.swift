@@ -38,7 +38,7 @@ struct ContentView: View {
             TextField("Name to add: ", text: $nameToAdd)
                 .autocorrectionDisabled()
                 .onSubmit {
-                    if !nameToAdd.isEmpty {
+                    if !nameToAdd.isEmpty && !names.contains(nameToAdd) {
                         names.append(nameToAdd)
                         nameToAdd = ""
                     }
