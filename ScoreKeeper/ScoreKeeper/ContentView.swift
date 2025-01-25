@@ -20,6 +20,7 @@ struct ContentView: View {
             
             SettingsView(doesHighestScoreWin : $scoreboard.doesHighestScore , startingPoints : $startingPoints)
                 .disabled(scoreboard.state != .setup)
+            
             Grid {
                 GridRow {
                     Text("Player")
