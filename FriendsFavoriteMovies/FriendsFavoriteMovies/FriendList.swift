@@ -13,15 +13,28 @@ struct FriendList: View {
     @Environment(\.modelContext) private var context
     @State private var newFriend : Friend?
     
+    init(titletFilter: String = "") {
+        let predicate = #Predicate<Friend> { friend in
+            titletFilter.isEmpty || friend.name.localizedStandardContains(titletFilter)
+        }
+        
+        _friends = Query(filter: predicate, sort: \Friend.name)
+    }
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(friends) { friend in
-                    NavigationLink(friend.name) {
-                        FriendDetail(friend: friend)
+            Group {
+                if !friends.isEmpty {
+                    List {
+                        ForEach(friends) { friend in
+                            NavigationLink(friend.name) {
+                                FriendDetail(friend: friend)
+                            }
+                        }
+                        .onDelete(perform: deleteFriend(indexes:))
                     }
+                } else {
+                    ContentUnavailableView("Add friends", systemImage: "person.and.person")
                 }
-                .onDelete(perform: deleteFriend(indexes:))
             }
             .navigationTitle("Friends")
             .toolbar {
@@ -38,11 +51,6 @@ struct FriendList: View {
                 }
                 .interactiveDismissDisabled()
             }
-        } detail: {
-            Text("Select a friend")
-                .navigationTitle("Friend")
-                .navigationBarTitleDisplayMode(.inline)
-        }
     }
     
     private func addFriend() {
@@ -62,4 +70,18 @@ struct FriendList: View {
 #Preview {
     FriendList()
         .modelContainer(SampleData.shared.modelContainer)
+}
+
+#Preview ("Filtered") {
+    NavigationStack {
+        FriendList(titletFilter: "tr")
+            .modelContainer(SampleData.shared.modelContainer)
+    }
+}
+
+#Preview ("Empty list") {
+    NavigationStack {
+        FriendList()
+            .modelContainer(for: Friend.self, inMemory: true)
+    }
 }

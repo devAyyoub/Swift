@@ -9,41 +9,48 @@ import SwiftUI
 import SwiftData
 
 struct MovieList: View {
-    @Query(sort: \Movie.title) private var movies : [Movie]
+    @Query private var movies : [Movie]
     @Environment(\.modelContext) private var context
     @State private var newMovie : Movie?
     
-    var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(movies) { movie in
-                    NavigationLink(movie.title) {
-                        MovieDetail(movie: movie)
-                    }
-                }
-                .onDelete(perform: deleteMovie(indexes: ))
-            }
-            .navigationTitle("Movies")
-            .toolbar {
-                ToolbarItem {
-                    Button("Add new movie", systemImage: "plus", action: addMovie)
-                }
-                ToolbarItem (placement: .topBarTrailing) {
-                    EditButton()
-                }
-            }
-            .sheet(item: $newMovie) { movie in
-                NavigationStack {
-                    MovieDetail(movie: movie, isNew: true)
-                }
-                .interactiveDismissDisabled()
-            }
-        } detail: {
-            Text("Select a movie")
-                .navigationTitle("Movie")
-                .navigationBarTitleDisplayMode(.inline)
+    init(titletFilter: String = "") {
+        let predicate = #Predicate<Movie> { movie in
+            titletFilter.isEmpty || movie.title.localizedStandardContains(titletFilter)
         }
         
+        _movies = Query(filter: predicate, sort: \Movie.title)
+    }
+    
+    var body: some View {
+        Group {
+            if !movies.isEmpty {
+                List {
+                    ForEach(movies) { movie in
+                        NavigationLink(movie.title) {
+                            MovieDetail(movie: movie)
+                        }
+                    }
+                    .onDelete(perform: deleteMovie(indexes: ))
+                }
+            } else {
+                ContentUnavailableView("Add Movies", systemImage: "film.stack")
+            }
+        }
+        .navigationTitle("Movies")
+        .toolbar {
+            ToolbarItem {
+                Button("Add new movie", systemImage: "plus", action: addMovie)
+            }
+            ToolbarItem (placement: .topBarTrailing) {
+                EditButton()
+            }
+        }
+        .sheet(item: $newMovie) { movie in
+            NavigationStack {
+                MovieDetail(movie: movie, isNew: true)
+            }
+            .interactiveDismissDisabled()
+        }
     }
     
     private func addMovie() {
@@ -60,6 +67,22 @@ struct MovieList: View {
  }
 
 #Preview {
-    MovieList()
-        .modelContainer(SampleData.shared.modelContainer)
+    NavigationStack {
+        MovieList()
+            .modelContainer(SampleData.shared.modelContainer)
+    }
+}
+
+#Preview ("Filtered") {
+    NavigationStack {
+        MovieList(titletFilter: "tr")
+            .modelContainer(SampleData.shared.modelContainer)
+    }
+}
+
+#Preview ("Empty list") {
+    NavigationStack {
+            MovieList()
+                .modelContainer(for: Movie.self, inMemory: true)
+    }
 }
