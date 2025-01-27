@@ -11,9 +11,19 @@ import SwiftData
 @MainActor
 class SampleData {
     static let shared = SampleData()
+    
     let modelContainer : ModelContainer
+    
     var context : ModelContext {
         modelContainer.mainContext
+    }
+    
+    var friend : Friend {
+        Friend.sampleData.first!
+    }
+    
+    var movie : Movie {
+        Movie.sampleData.first!
     }
     
     private init() {
